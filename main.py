@@ -1,4 +1,4 @@
-from level_style import *
+from login_window import *
 from settings import start_app
 
 
