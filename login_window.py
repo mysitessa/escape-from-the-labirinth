@@ -1,6 +1,10 @@
+import pygame.event
+import sqlite3
 from settings import *
 import sys
 
+CON = sqlite3.connect('Base_Date.sqlite')
+CUR = CON.cursor()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 FONT_COLOR = (0, 0, 0)
@@ -8,6 +12,7 @@ get_config()
 settings = start_app()
 screen = settings[0]
 FPS = settings[1]
+pygame.init()
 
 
 class InputBox:
@@ -29,6 +34,7 @@ class InputBox:
             self.color = self.color_active if self.active else self.color_inactive
 
         if event.type == pygame.KEYDOWN and self.active:
+            # TODO сделать два разных self.active and self.text для сохранения логина и пароля отдельно
             if event.key == pygame.K_RETURN:
                 print(self.text)
                 self.text = ''
@@ -36,6 +42,7 @@ class InputBox:
                 self.text = self.text[:-1]
             else:
                 self.text += event.unicode
+                print(self.text)
 
     def draw(self, surface):
         # Отрисовка поля ввода
@@ -59,7 +66,7 @@ class Button:
 
 class Osnova:
     def __init__(self):
-        pygame.init()
+
         self.screen = screen
         pygame.display.set_caption("Вход и Регистрация")
 
@@ -75,6 +82,10 @@ class Osnova:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.button_register.rect.collidepoint(event.pos):
+                        app = Registration()
+                        app.run()
 
                 # Обработка событий для полей ввода
                 self.input_box_user.event(event)
@@ -85,6 +96,39 @@ class Osnova:
             self.input_box_user.draw(self.screen)
             self.input_box_pass.draw(self.screen)
             self.button_login.draw(self.screen)
+            self.button_register.draw(self.screen)
+
+            pygame.display.flip()
+
+
+class Registration:
+    def __init__(self):
+        pygame.init()
+        self.screen = screen
+        pygame.display.set_caption("Регистрация")
+
+        # Создание объектов
+        self.input_box_user = InputBox(100, 100, 400, 40)
+        self.input_box_pass = InputBox(100, 150, 400, 40)
+        self.button_register = Button(220, 200, 150, 32, "Регистрация")
+
+    def run(self):
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                # if event.type == pygame.MOUSEBUTTONDOWN:
+                # if self.button_register.rect.collidepoint(event.pos):
+
+                # Обработка событий для полей ввода
+                self.input_box_user.event(event)
+                self.input_box_pass.event(event)
+
+            # Отрисовка элементов
+            self.screen.fill(WHITE)
+            self.input_box_user.draw(self.screen)
+            self.input_box_pass.draw(self.screen)
             self.button_register.draw(self.screen)
 
             pygame.display.flip()
