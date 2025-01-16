@@ -15,7 +15,7 @@ FPS = settings[1]
 pygame.init()
 
 
-class InputBox:
+class InputForPasLog:
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.color_inactive = pygame.Color('lightskyblue3')
@@ -34,18 +34,14 @@ class InputBox:
             self.color = self.color_active if self.active else self.color_inactive
 
         if event.type == pygame.KEYDOWN and self.active:
-            # TODO сделать два разных self.active and self.text для сохранения логина и пароля отдельно
             if event.key == pygame.K_RETURN:
-                print(self.text)
                 self.text = ''
             elif event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
             else:
                 self.text += event.unicode
-                print(self.text)
 
     def draw(self, surface):
-        # Отрисовка поля ввода
         pygame.draw.rect(surface, self.color, self.rect)
         text_surface = self.font.render(self.text, True, FONT_COLOR)
         surface.blit(text_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -57,6 +53,8 @@ class Button:
         self.color = FONT_COLOR
         self.font = pygame.font.Font(None, 32)
         self.text = text
+
+    # Рисовальник кнопок(ректов) взож и регистрация
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
@@ -70,9 +68,9 @@ class Osnova:
         self.screen = screen
         pygame.display.set_caption("Вход и Регистрация")
 
-        # Создание объектов
-        self.input_box_user = InputBox(100, 100, 400, 40)
-        self.input_box_pass = InputBox(100, 150, 400, 40)
+        # Создание инпутов пароля и тд, кнопок
+        self.input_box_user = InputForPasLog(100, 100, 400, 40)
+        self.input_box_pass = InputForPasLog(100, 150, 400, 40)
         self.button_login = Button(100, 200, 80, 32, "Вход")
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
 
@@ -87,7 +85,7 @@ class Osnova:
                         app = Registration()
                         app.run()
 
-                # Обработка событий для полей ввода
+                # события ректов
                 self.input_box_user.event(event)
                 self.input_box_pass.event(event)
 
@@ -108,8 +106,8 @@ class Registration:
         pygame.display.set_caption("Регистрация")
 
         # Создание объектов
-        self.input_box_user = InputBox(100, 100, 400, 40)
-        self.input_box_pass = InputBox(100, 150, 400, 40)
+        self.input_box_user = InputForPasLog(100, 100, 400, 40)
+        self.input_box_pass = InputForPasLog(100, 150, 400, 40)
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
 
     def run(self):
@@ -118,12 +116,15 @@ class Registration:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                # if event.type == pygame.MOUSEBUTTONDOWN:
-                # if self.button_register.rect.collidepoint(event.pos):
 
-                # Обработка событий для полей ввода
                 self.input_box_user.event(event)
                 self.input_box_pass.event(event)
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.button_register.rect.collidepoint(event.pos):
+                        username = self.input_box_user.text
+                        password = self.input_box_pass.text
+                        print(username, 'пароль', password)
 
             # Отрисовка элементов
             self.screen.fill(WHITE)
@@ -131,7 +132,15 @@ class Registration:
             self.input_box_pass.draw(self.screen)
             self.button_register.draw(self.screen)
 
-            pygame.display.flip()
+    def register_user(self, username, password):
+        try:
+            CUR.execute("INSERT INTO login (username, password) VALUES (?, ?)", (username, password))
+            CON.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False  # Пользователь уже существует
+
+    pygame.display.flip()
 
 
 def start_game():
