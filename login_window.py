@@ -15,7 +15,7 @@ FPS = settings[1]
 pygame.init()
 
 
-class InputForPasLog:
+class InputBox:
     def __init__(self, x, y, width, height):
         self.rect = pygame.Rect(x, y, width, height)
         self.color_inactive = pygame.Color('lightskyblue3')
@@ -42,6 +42,7 @@ class InputForPasLog:
                 self.text += event.unicode
 
     def draw(self, surface):
+        # Отрисовка поля ввода
         pygame.draw.rect(surface, self.color, self.rect)
         text_surface = self.font.render(self.text, True, FONT_COLOR)
         surface.blit(text_surface, (self.rect.x + 5, self.rect.y + 5))
@@ -53,8 +54,6 @@ class Button:
         self.color = FONT_COLOR
         self.font = pygame.font.Font(None, 32)
         self.text = text
-
-    # Рисовальник кнопок(ректов) взож и регистрация
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
@@ -68,9 +67,9 @@ class Osnova:
         self.screen = screen
         pygame.display.set_caption("Вход и Регистрация")
 
-        # Создание инпутов пароля и тд, кнопок
-        self.input_box_user = InputForPasLog(100, 100, 400, 40)
-        self.input_box_pass = InputForPasLog(100, 150, 400, 40)
+        # Создание объектов
+        self.input_box_user = InputBox(100, 100, 400, 40)
+        self.input_box_pass = InputBox(100, 150, 400, 40)
         self.button_login = Button(100, 200, 80, 32, "Вход")
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
 
@@ -85,7 +84,7 @@ class Osnova:
                         app = Registration()
                         app.run()
 
-                # события ректов
+                # Обработка событий для полей ввода
                 self.input_box_user.event(event)
                 self.input_box_pass.event(event)
 
@@ -106,8 +105,8 @@ class Registration:
         pygame.display.set_caption("Регистрация")
 
         # Создание объектов
-        self.input_box_user = InputForPasLog(100, 100, 400, 40)
-        self.input_box_pass = InputForPasLog(100, 150, 400, 40)
+        self.input_box_user = InputBox(100, 100, 400, 40)
+        self.input_box_pass = InputBox(100, 150, 400, 40)
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
 
     def run(self):
@@ -116,13 +115,13 @@ class Registration:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_register.rect.collidepoint(event.pos):
-                        username = self.input_box_user.text
-                        password = self.input_box_pass.text
-                        print(username, 'пароль', password)
+                        self.password = self.input_box_pass.text
+                        self.user = self.input_box_user.text
+                        print(self.password, self.user)
 
+                # Обработка событий для полей ввода
                 self.input_box_user.event(event)
                 self.input_box_pass.event(event)
 
@@ -132,7 +131,7 @@ class Registration:
             self.input_box_pass.draw(self.screen)
             self.button_register.draw(self.screen)
 
-    pygame.display.flip()
+            pygame.display.flip()
 
 
 def start_game():
