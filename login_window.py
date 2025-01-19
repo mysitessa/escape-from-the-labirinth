@@ -117,28 +117,20 @@ class Registration:
                     pygame.quit()
                     sys.exit()
 
-                self.input_box_user.event(event)
-                self.input_box_pass.event(event)
-
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_register.rect.collidepoint(event.pos):
                         username = self.input_box_user.text
                         password = self.input_box_pass.text
                         print(username, 'пароль', password)
 
+                self.input_box_user.event(event)
+                self.input_box_pass.event(event)
+
             # Отрисовка элементов
             self.screen.fill(WHITE)
             self.input_box_user.draw(self.screen)
             self.input_box_pass.draw(self.screen)
             self.button_register.draw(self.screen)
-
-    def register_user(self, username, password):
-        try:
-            CUR.execute("INSERT INTO login (username, password) VALUES (?, ?)", (username, password))
-            CON.commit()
-            return True
-        except sqlite3.IntegrityError:
-            return False  # Пользователь уже существует
 
     pygame.display.flip()
 
