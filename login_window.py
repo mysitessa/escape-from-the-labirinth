@@ -75,6 +75,11 @@ class Button:
         f2 = pygame.font.Font(None, 36)
         text2 = f2.render('Войдите или зарегестрируйтесь', True, WHITE)
         surface.blit(text2, (300, 20))
+        f3 = pygame.font.Font(None, 36)
+        text3 = f3.render("пароль:", True, WHITE)
+        surface.blit(text3, (1, 162))
+        text4 = f3.render("логин:", True, WHITE)
+        surface.blit(text4, (1, 110))
 
 
 class Osnova:
