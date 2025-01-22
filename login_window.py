@@ -14,14 +14,16 @@ screen = settings[0]
 FPS = settings[1]
 pygame.init()
 
+
 class Background(pygame.sprite.Sprite):
     def __init__(self, image_file, location):
-        pygame.sprite.Sprite.__init__(self)  #call Sprite initializer
+        pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(image_file)
         self.rect = self.image.get_rect()
         self.rect.left, self.rect.top = location
 
-BackGround = Background('./image/BackGround_login.jpg', [0,0])
+
+BackGround = Background('./image/BackGround_login.jpg', [0, 0])
 
 
 class InputBox:
@@ -88,7 +90,6 @@ class Osnova:
         self.screen = screen
         pygame.display.set_caption("Вход и Регистрация")
 
-
         # Создание объектов
         self.input_box_user = InputBox(100, 100, 400, 40)
         self.input_box_pass = InputBox(100, 150, 400, 40)
@@ -96,7 +97,6 @@ class Osnova:
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
         self.password_vhod = self.input_box_pass.text
         self.user_vhod = self.input_box_user.text
-
 
     def run(self):
         while True:
