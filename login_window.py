@@ -1,5 +1,6 @@
 import pygame.event
 import sqlite3
+
 from settings import *
 import sys
 
@@ -136,7 +137,9 @@ class Osnova:
             if username_bd[0][0] == self.password_vhod:
                 run_menu()
         except Exception:
-            pass
+            f5 = pygame.font.Font(None, 36)
+            text5 = f5.render("неправильный пароль или логин", True, (255, 0, 0))
+            screen.blit(text5, (100, 400))
 
 
 class Registration:
@@ -177,11 +180,13 @@ class Registration:
 
     def reg(self):
         # TODO проверка что этого пользователя езе нет в БД
-        print(self.password, self.user)
-        if self.user and self.password:
+        users = CUR.execute("""SELECT username FROM login""").fetchall()
+        if self.user and self.password and self.user not in users[0]:
             CUR.execute(f"INSERT INTO login(password, username) VALUES('{self.password}', '{self.user}')")
             CON.commit()
             run_menu()
+        else:
+            print('ER')
 
 
 def start_game():
