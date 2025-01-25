@@ -10,25 +10,17 @@ screen = settings[0]
 FPS = settings[1]
 
 
-class Background(pygame.sprite.Sprite):
-    def __init__(self, image_file, location):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(image_file)
-        self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = location
-
-
-BackGround = Background('./image/BackGround_login.jpg', [0, 0])
-
-
 def return_login():
     login_window.start_game()
 
 
-def start_game():
+def run_menu():
     running = True
-    menu = pygame_menu.Menu('Welcome', 900, 700,
-                            theme=pygame_menu.themes.THEME_BLUE)
+    theme = pygame_menu.themes.THEME_BLUE.copy()
+    background = pygame_menu.baseimage.BaseImage("./image/BackGround_login.jpg")
+    theme.background_color = background
+    menu = pygame_menu.Menu('MONSTER_HUNTER', 900, 700,
+                            theme=theme)
 
     menu.add.text_input('Имя:', default='')
     menu.add.button('Играть')
@@ -37,9 +29,6 @@ def start_game():
     while running:
         clock = pygame.time.Clock()
         running = True
-
-        screen.fill((0, 0, 0))
-        screen.blit(BackGround.image, BackGround.rect)
         menu.mainloop(screen)
         for event in pygame.event.get():
             # при закрытии окна
