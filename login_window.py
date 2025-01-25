@@ -13,6 +13,7 @@ settings = start_app()
 screen = settings[0]
 FPS = settings[1]
 pygame.init()
+from start_window import run_menu
 
 
 class Background(pygame.sprite.Sprite):
@@ -130,9 +131,12 @@ class Osnova:
             pygame.display.flip()
 
     def log_in(self):
-        username_bd = CUR.execute(f"SELECT password FROM login WHERE username = '{self.user_vhod}'").fetchall()
-        if username_bd[0][0] == self.password_vhod:
-            print("whdhd")
+        try:
+            username_bd = CUR.execute(f"SELECT password FROM login WHERE username = '{self.user_vhod}'").fetchall()
+            if username_bd[0][0] == self.password_vhod:
+                run_menu()
+        except Exception:
+            pass
 
 
 class Registration:
@@ -172,10 +176,12 @@ class Registration:
             pygame.display.flip()
 
     def reg(self):
+        # TODO проверка что этого пользователя езе нет в БД
         print(self.password, self.user)
         if self.user and self.password:
             CUR.execute(f"INSERT INTO login(password, username) VALUES('{self.password}', '{self.user}')")
             CON.commit()
+            run_menu()
 
 
 def start_game():
