@@ -1,4 +1,3 @@
-import pygame
 import os
 import sys
 from settings import *
@@ -94,6 +93,8 @@ def generate_level(level):
     return new_player, x, y
 
 
+# TODO сделать функцию move
+
 if __name__ == '__main__':
     player = None
     ranning = True
@@ -103,6 +104,11 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 ranning = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    print('sd')
+                # TODO if
         sprite_group.draw(screen)
         hero_group.draw(screen)
         pygame.display.flip()
