@@ -3,9 +3,11 @@ import sqlite3
 
 from settings import *
 import sys
+from connect import connect
 
-CON = sqlite3.connect('Base_Date.sqlite')
-CUR = CON.cursor()
+con = connect()
+CON = con[0]
+CUR = con[1]
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 FONT_COLOR = (0, 0, 0)
@@ -14,7 +16,13 @@ settings = start_app()
 screen = settings[0]
 FPS = settings[1]
 pygame.init()
+username_for_game = ''
 from start_window import run_menu
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
 class Background(pygame.sprite.Sprite):
@@ -135,7 +143,8 @@ class Osnova:
         try:
             username_bd = CUR.execute(f"SELECT password FROM login WHERE username = '{self.user_vhod}'").fetchall()
             if username_bd[0][0] == self.password_vhod:
-                run_menu()
+                run_menu(self.user_vhod)
+                terminate()
         except Exception:
             f5 = pygame.font.Font(None, 36)
             text5 = f5.render("неправильный пароль или логин", True, (255, 0, 0))
@@ -184,7 +193,8 @@ class Registration:
         if self.user and self.password and self.user not in users[0]:
             CUR.execute(f"INSERT INTO login(password, username) VALUES('{self.password}', '{self.user}')")
             CON.commit()
-            run_menu()
+            run_menu(self.user)
+            terminate()
         else:
             print('ER')
 

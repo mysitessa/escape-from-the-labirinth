@@ -1,6 +1,7 @@
 from settings import *
 import pygame_menu
 import login_window
+from game import run_game_py, get_user
 
 WHITE = (255, 255, 255)
 
@@ -14,7 +15,7 @@ def return_login():
     login_window.start_game()
 
 
-def run_menu():
+def run_menu(username):
     running = True
     theme = pygame_menu.themes.THEME_BLUE.copy()
     background = pygame_menu.baseimage.BaseImage("./image/BackGround_login.jpg")
@@ -23,7 +24,8 @@ def run_menu():
                             theme=theme)
 
     menu.add.text_input('Имя:', default='')
-    menu.add.button('Играть')
+    get_user(username)
+    menu.add.button('Играть', run_game_py)
     menu.add.button('Сменить аккаунт', return_login)
 
     while running:

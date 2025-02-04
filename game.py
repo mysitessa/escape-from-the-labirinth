@@ -1,14 +1,30 @@
 import os
 import sys
 from settings import *
+import time
+from connect import connect
+
+con = connect()
+CON = con[0]
+CUR = con[1]
+
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, image_file, location):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(image_file)
+        self.rect = self.image.get_rect()
+        self.rect.left, self.rect.top = location
+
+
+BackGround = Background('./image/H-qKzXj2k-k.jpg', [0, 0])
 
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('image', name)
-    # если файл не существует, то выходим
     if not os.path.isfile(fullname):
         print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
+        raise FileNotFoundError(fullname)
     image = pygame.image.load(fullname)
     return image
 
@@ -22,12 +38,14 @@ FPS = settings[1]
 sprite_group = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 
-tile_image = {'wall': load_image('stena.jpg'),
-              'empty': load_image('grass.png'),
-              'hero': load_image('main_hero.png')}
-player_image = load_image('main_hero.png')
+tile_image = {
+    'wall': load_image('stena.jpg'),
+    'empty': load_image('grass.png'),
+    'hero': load_image('main_hero.png')
+}
 
 tile_width = tile_height = 50
+player_x, player_y = 0, 0
 
 
 class ScreenFrame(pygame.sprite.Sprite):
@@ -64,9 +82,26 @@ class Tile(Sprite):
 class Player(Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(hero_group)
-        self.image = player_image
+        self.image = tile_image['hero']
         self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
         self.pos = (pos_x, pos_y)
+
+    def move(self, dx, dy):
+        global player_x, player_y
+        # Продолжаем двигаться в заданном направлении до столкновения со стеной
+        while True:
+            new_x = player_x + dx
+            new_y = player_y + dy
+            if 0 <= new_x < len(level[0]) and 0 <= new_y < len(level):
+                if level[new_y][new_x] != '#':
+                    level[player_y] = level[player_y][:player_x] + '.' + level[player_y][player_x + 1:]
+                    level[new_y] = level[new_y][:new_x] + '@' + level[new_y][new_x + 1:]
+                    player_x, player_y = new_x, new_y
+                    self.rect.move_ip(dx * tile_width, dy * tile_height)  # Обновление позиции спрайта
+                else:
+                    break
+            else:
+                break
 
 
 def terminate():
@@ -75,41 +110,95 @@ def terminate():
 
 
 def load_level(filename):
-    filename = filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
     max_width = max(map(len, level_map))
     return list(map(lambda x: list(x.ljust(max_width, '.')), level_map))
 
 
+level = load_level('level_1.txt')
+norm_level = []
+for i in level:
+    norm_level.append(''.join(i))
+
+level = norm_level
+
+
 def generate_level(level):
-    new_player, x, y = None, None, None
+    new_player = None
+
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '#':
                 Tile('wall', x, y)
             elif level[y][x] == '@':
                 new_player = Player(x, y)
-    return new_player, x, y
+                global player_x, player_y
+                player_x, player_y = x, y  # нач коорд
+    return new_player
 
 
-# TODO сделать функцию move
+font = pygame.font.Font(None, 74)
+start_time = time.time()
 
-if __name__ == '__main__':
+
+def timer():
+    elapsed_time = time.time() - start_time
+    minutes = int(elapsed_time // 60)
+    seconds = int(elapsed_time % 60)
+    time_text = f"{minutes}:{seconds}"
+    time.sleep(0.1)
+    return time_text, minutes, seconds
+
+
+def get_user(username):
+    global user
+    user = username
+
+
+def run_game_py():
     player = None
-    ranning = True
+    running = True
     level_map = load_level('level_1.txt')
-    hero, max_x, max_y = generate_level(level_map)
-    while ranning:
+    hero = generate_level(level_map)
+
+    while running:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                ranning = False
-
+                running = False
+            # Движение
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    print('sd')
-                # TODO if
+                    hero.move(0, -1)
+                    level = level_map
+                elif event.key == pygame.K_DOWN:
+                    hero.move(0, 1)
+                elif event.key == pygame.K_LEFT:
+                    hero.move(-1, 0)
+                elif event.key == pygame.K_RIGHT:
+                    hero.move(1, 0)
+
+        screen.fill((0, 0, 0))
+        screen.blit(BackGround.image, BackGround.rect)
         sprite_group.draw(screen)
         hero_group.draw(screen)
         pygame.display.flip()
-    pygame.quit()
+        cur_record = CUR.execute(f"SELECT time_rec FROM login WHERE username = '{user}'").fetchall()
+        cur_record = cur_record[0][0]
+        time = timer()
+        if cur_record:
+            cur_record_min = int(cur_record[:cur_record.index(':')])
+            cur_record_sec = int(cur_record[cur_record.index(':') + 1:])
+            new_minutes = int(time[1])
+            new_seconds = int(time[2])
+            print(cur_record_min, cur_record_sec)
+            print(new_minutes, new_seconds)
+            if new_minutes < cur_record_min or (new_seconds < cur_record_sec and new_minutes == cur_record_min):
+                CUR.execute(f"UPDATE login SET time_rec = '{time[0]}' WHERE username = '{user}'")
+                CON.commit()
+        else:
+            CUR.execute(f"UPDATE login SET time_rec = '{time[0]}' WHERE username = '{user}'")
+            CON.commit()
+
+    terminate()
