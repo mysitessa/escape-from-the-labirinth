@@ -40,7 +40,6 @@ hero_group = pygame.sprite.Group()
 
 tile_image = {
     'wall': load_image('stena.jpg'),
-    'empty': load_image('grass.png'),
     'hero': load_image('main_hero.png')
 }
 
@@ -116,12 +115,18 @@ def load_level(filename):
     return list(map(lambda x: list(x.ljust(max_width, '.')), level_map))
 
 
-level = load_level('level_1.txt')
+LEVELS_SP = ['level1.txt', 'level2.txt', 'level3.txt', 'level4.txt', 'level5.txt', 'level6.txt', 'level7.txt',
+             'level8.txt']
+cur_stolb = LEVELS_SP[1]
+cur_level = './levels_txt/' + cur_stolb
+cur_stolb = cur_stolb[:cur_stolb.index('.')]
+level = load_level(cur_level)
 norm_level = []
 for i in level:
     norm_level.append(''.join(i))
 
-level = norm_level
+level = norm_level.copy()
+norm_level.clear()
 
 
 def generate_level(level):
@@ -157,11 +162,17 @@ def get_user(username):
 
 
 def run_game_py():
-    player = None
     running = True
-    level_map = load_level('level_1.txt')
+    level_map = load_level(cur_level)
     hero = generate_level(level_map)
 
+    cur_record = CUR.execute(f"SELECT {cur_stolb} FROM login WHERE username = '{user}'").fetchall()
+    cur_record = cur_record[0][0]
+    cur_record_min = ''
+    cur_record_sec = ''
+    if cur_record:
+        cur_record_min = int(cur_record[:cur_record.index(':')])
+        cur_record_sec = int(cur_record[cur_record.index(':') + 1:])
     while running:
 
         for event in pygame.event.get():
@@ -171,34 +182,35 @@ def run_game_py():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     hero.move(0, -1)
-                    level = level_map
+                    # print(player_x, player_y)
                 elif event.key == pygame.K_DOWN:
                     hero.move(0, 1)
+                    # print(player_x, player_y)
                 elif event.key == pygame.K_LEFT:
                     hero.move(-1, 0)
+                    # print(player_x, player_y)
                 elif event.key == pygame.K_RIGHT:
                     hero.move(1, 0)
+                    # print(player_x, player_y)
 
         screen.fill((0, 0, 0))
         screen.blit(BackGround.image, BackGround.rect)
         sprite_group.draw(screen)
         hero_group.draw(screen)
         pygame.display.flip()
-        cur_record = CUR.execute(f"SELECT time_rec FROM login WHERE username = '{user}'").fetchall()
-        cur_record = cur_record[0][0]
         time = timer()
-        if cur_record:
-            cur_record_min = int(cur_record[:cur_record.index(':')])
-            cur_record_sec = int(cur_record[cur_record.index(':') + 1:])
+        if cur_record and level_map[player_y][player_x] == '*':
             new_minutes = int(time[1])
             new_seconds = int(time[2])
-            print(cur_record_min, cur_record_sec)
-            print(new_minutes, new_seconds)
             if new_minutes < cur_record_min or (new_seconds < cur_record_sec and new_minutes == cur_record_min):
-                CUR.execute(f"UPDATE login SET time_rec = '{time[0]}' WHERE username = '{user}'")
+                print('wdqwd')
+                CUR.execute(f"UPDATE login SET {cur_stolb} = '{time[0]}' WHERE username = '{user}'")
                 CON.commit()
-        else:
-            CUR.execute(f"UPDATE login SET time_rec = '{time[0]}' WHERE username = '{user}'")
+                ranning = False
+        elif level_map[player_y][player_x] == '*':
+            CUR.execute(f"UPDATE login SET {cur_stolb} = '{time[0]}' WHERE username = '{user}'")
+            print('asasd')
             CON.commit()
+            running = False
 
     terminate()

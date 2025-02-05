@@ -188,9 +188,7 @@ class Registration:
             pygame.display.flip()
 
     def reg(self):
-        # TODO проверка что этого пользователя езе нет в БД
-        users = CUR.execute("""SELECT username FROM login""").fetchall()
-        if self.user and self.password and self.user not in users[0]:
+        if self.user and self.password:
             CUR.execute(f"INSERT INTO login(password, username) VALUES('{self.password}', '{self.user}')")
             CON.commit()
             run_menu(self.user)
