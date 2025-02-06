@@ -1,5 +1,7 @@
 import os
 import sys
+
+import login_window
 from settings import *
 import time
 from connect import connect
@@ -117,7 +119,7 @@ def load_level(filename):
 
 LEVELS_SP = ['level1.txt', 'level2.txt', 'level3.txt', 'level4.txt', 'level5.txt', 'level6.txt', 'level7.txt',
              'level8.txt']
-cur_stolb = LEVELS_SP[1]
+cur_stolb = LEVELS_SP[6]
 cur_level = './levels_txt/' + cur_stolb
 cur_stolb = cur_stolb[:cur_stolb.index('.')]
 level = load_level(cur_level)
@@ -143,25 +145,45 @@ def generate_level(level):
     return new_player
 
 
-font = pygame.font.Font(None, 74)
-start_time = time.time()
-
-
-def timer():
-    elapsed_time = time.time() - start_time
-    minutes = int(elapsed_time // 60)
-    seconds = int(elapsed_time % 60)
-    time_text = f"{minutes}:{seconds}"
-    time.sleep(0.1)
-    return time_text, minutes, seconds
-
-
 def get_user(username):
     global user
     user = username
 
 
+def game_end(cur_time, rec_time, rec):
+    surface = pygame.Surface((900, 700))
+    surface.set_alpha(255)
+
+    running = True
+    to_level = login_window.Button(350, 300, 200, 50, 'К уровням')
+    restart = login_window.Button(350, 400, 200, 50, 'Заново')
+    while running:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        screen.fill((0, 0, 0))
+        surface.blit(BackGround.image, BackGround.rect)
+        font1 = pygame.font.Font(None, 74)
+        font2 = pygame.font.Font(None, 36)
+        tex = font1.render('Уровень Завершен', True, (255, 0, 0))
+        surface.blit(tex, (250, 20))
+        tex2 = font2.render(f'Текущее время:{cur_time}', True, (255, 255, 255))
+        surface.blit(tex2, (350, 100))
+        tex3 = font2.render(f'Рекордное время:{rec_time}', True, (255, 255, 255))
+        surface.blit(tex3, (350, 150))
+        if rec:
+            tex4 = font1.render('ВЫ ПОБИЛИ РЕКОРД', True, (0, 255, 0))
+            surface.blit(tex4, (230, 210))
+        to_level.draw_level_end(surface)
+        restart.draw_level_end(surface)
+        screen.blit(surface, (0, 0))
+        pygame.display.flip()
+
+
 def run_game_py():
+    start_time = time.time()
     running = True
     level_map = load_level(cur_level)
     hero = generate_level(level_map)
@@ -170,6 +192,8 @@ def run_game_py():
     cur_record = cur_record[0][0]
     cur_record_min = ''
     cur_record_sec = ''
+    font = pygame.font.Font(None, 74)
+
     if cur_record:
         cur_record_min = int(cur_record[:cur_record.index(':')])
         cur_record_sec = int(cur_record[cur_record.index(':') + 1:])
@@ -182,35 +206,49 @@ def run_game_py():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     hero.move(0, -1)
-                    # print(player_x, player_y)
+                    print(player_x, player_y)
                 elif event.key == pygame.K_DOWN:
                     hero.move(0, 1)
-                    # print(player_x, player_y)
+                    print(player_x, player_y)
                 elif event.key == pygame.K_LEFT:
                     hero.move(-1, 0)
-                    # print(player_x, player_y)
+                    print(player_x, player_y)
                 elif event.key == pygame.K_RIGHT:
                     hero.move(1, 0)
-                    # print(player_x, player_y)
+                    print(player_x, player_y)
 
+        elapsed_time = f'{time.time() - start_time}:.2f'
         screen.fill((0, 0, 0))
         screen.blit(BackGround.image, BackGround.rect)
         sprite_group.draw(screen)
         hero_group.draw(screen)
+
+        new_minutes = int(elapsed_time[:elapsed_time.index('.')]) // 60
+        new_seconds = int(elapsed_time[:elapsed_time.index('.')]) % 60
+        time_display = font.render(f"{new_minutes}:{new_seconds}", True, (255, 255, 255))
+        screen.blit(time_display, (700, 20))
         pygame.display.flip()
-        time = timer()
+
         if cur_record and level_map[player_y][player_x] == '*':
-            new_minutes = int(time[1])
-            new_seconds = int(time[2])
+            time_to_BD = f'{new_minutes}:{new_seconds}'
             if new_minutes < cur_record_min or (new_seconds < cur_record_sec and new_minutes == cur_record_min):
-                print('wdqwd')
-                CUR.execute(f"UPDATE login SET {cur_stolb} = '{time[0]}' WHERE username = '{user}'")
+                CUR.execute(f"UPDATE login SET {cur_stolb} = '{time_to_BD}' WHERE username = '{user}'")
                 CON.commit()
-                ranning = False
+                game_end(time_to_BD, time_to_BD, 1)
+                running = False
+                terminate()
+            else:
+                game_end(time_to_BD, cur_record, 0)
+                running = False
+                terminate()
+
+                # break
         elif level_map[player_y][player_x] == '*':
-            CUR.execute(f"UPDATE login SET {cur_stolb} = '{time[0]}' WHERE username = '{user}'")
-            print('asasd')
+            time_to_BD = f'{new_minutes}:{new_seconds}'
+            CUR.execute(f"UPDATE login SET {cur_stolb} = '{time_to_BD}' WHERE username = '{user}'")
             CON.commit()
+            game_end(time_to_BD, time_to_BD, 1)
             running = False
+            terminate()
 
     terminate()

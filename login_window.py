@@ -1,10 +1,9 @@
 import pygame.event
-import sqlite3
 
 from settings import *
 import sys
 from connect import connect
-
+pygame.display.set_caption('Monster_Hunter')
 con = connect()
 CON = con[0]
 CUR = con[1]
@@ -76,6 +75,12 @@ class Button:
         self.font = pygame.font.Font(None, 32)
         self.text = text
 
+    def draw_level_end(self, surface):
+        pygame.draw.rect(surface, self.color, self.rect)
+        text_surface = self.font.render(self.text, True, WHITE)
+        surface.blit(text_surface, (self.rect.x + 10, self.rect.y + 5))
+
+
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
         text_surface = self.font.render(self.text, True, WHITE)
@@ -98,7 +103,6 @@ class Osnova:
     def __init__(self):
 
         self.screen = screen
-        pygame.display.set_caption("Вход и Регистрация")
 
         # Создание объектов
         self.input_box_user = InputBox(100, 100, 400, 40)
@@ -118,12 +122,14 @@ class Osnova:
                     if self.button_register.rect.collidepoint(event.pos):
                         app = Registration()
                         app.run()
+                        terminate()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self.button_login.rect.collidepoint(event.pos):
                         self.password_vhod = self.input_box_pass.text
                         self.user_vhod = self.input_box_user.text
                         if self.password_vhod and self.user_vhod:
                             self.log_in()
+
 
                 # Обработка событий для полей ввода
                 self.input_box_user.event(event)
@@ -155,12 +161,12 @@ class Registration:
     def __init__(self):
         pygame.init()
         self.screen = screen
-        pygame.display.set_caption("Регистрация")
 
         # Создание объектов
         self.input_box_user = InputBox(100, 100, 400, 40)
         self.input_box_pass = InputBox(100, 150, 400, 40)
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
+        self.nazad_login = Button(10, 50, 80, 32, "Назад")
 
     def run(self):
         while True:
@@ -173,6 +179,10 @@ class Registration:
                         self.password = self.input_box_pass.text
                         self.user = self.input_box_user.text
                         self.reg()
+                    if self.nazad_login.rect.collidepoint(event.pos):
+                        app = Osnova()
+                        app.run()
+                        terminate()
 
                 # Обработка событий для полей ввода
                 self.input_box_user.event(event)
@@ -184,6 +194,7 @@ class Registration:
             self.input_box_user.draw(self.screen)
             self.input_box_pass.draw(self.screen)
             self.button_register.draw(self.screen)
+            self.nazad_login.draw(self.screen)
 
             pygame.display.flip()
 

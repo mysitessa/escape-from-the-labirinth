@@ -1,3 +1,5 @@
+import sys
+
 from settings import *
 import pygame_menu
 import login_window
@@ -13,6 +15,9 @@ FPS = settings[1]
 
 def return_login():
     login_window.start_game()
+    pygame.quit()
+    sys.exit()
+
 
 
 def run_menu(username):
@@ -23,20 +28,16 @@ def run_menu(username):
     menu = pygame_menu.Menu('MONSTER_HUNTER', 900, 700,
                             theme=theme)
 
-    menu.add.text_input('Имя:', default='')
     get_user(username)
     menu.add.button('Играть', run_game_py)
     menu.add.button('Сменить аккаунт', return_login)
 
     while running:
-        clock = pygame.time.Clock()
         running = True
         menu.mainloop(screen)
         for event in pygame.event.get():
             # при закрытии окна
             if event.type == pygame.QUIT:
                 running = False
-
-        clock.tick(FPS)
         pygame.display.flip()
     pygame.quit()
