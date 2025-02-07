@@ -9,6 +9,8 @@ from connect import connect
 con = connect()
 CON = con[0]
 CUR = con[1]
+LEVELS_SP = ['level1.txt', 'level2.txt', 'level3.txt', 'level4.txt', 'level5.txt', 'level6.txt', 'level7.txt',
+             'level8.txt']
 
 
 class Background(pygame.sprite.Sprite):
@@ -42,26 +44,12 @@ hero_group = pygame.sprite.Group()
 
 tile_image = {
     'wall': load_image('stena.jpg'),
-    'hero': load_image('main_hero.png')
+    'hero': load_image('main_hero.png'),
+    'door': load_image('door.png')
 }
 
 tile_width = tile_height = 50
 player_x, player_y = 0, 0
-
-
-class ScreenFrame(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.rect = (0, 0, 500, 500)
-
-
-class SpriteGroup(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-
-    def get_event(self, event):
-        for inet in self:
-            inet.get_event(event)
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -117,18 +105,73 @@ def load_level(filename):
     return list(map(lambda x: list(x.ljust(max_width, '.')), level_map))
 
 
-LEVELS_SP = ['level1.txt', 'level2.txt', 'level3.txt', 'level4.txt', 'level5.txt', 'level6.txt', 'level7.txt',
-             'level8.txt']
-cur_stolb = LEVELS_SP[6]
-cur_level = './levels_txt/' + cur_stolb
-cur_stolb = cur_stolb[:cur_stolb.index('.')]
-level = load_level(cur_level)
-norm_level = []
-for i in level:
-    norm_level.append(''.join(i))
+def show_levels():
+    level1 = login_window.Button(200, 300, 150, 50, 'Уровень 1')
+    level2 = login_window.Button(200, 360, 150, 50, 'Уровень 2')
+    level3 = login_window.Button(200, 420, 150, 50, 'Уровень 3')
+    level4 = login_window.Button(200, 480, 150, 50, 'Уровень 4')
+    level5 = login_window.Button(600, 300, 150, 50, 'Уровень 5')
+    level6 = login_window.Button(600, 360, 150, 50, 'Уровень 6')
+    level7 = login_window.Button(600, 420, 150, 50, 'Уровень 7')
+    font1 = pygame.font.Font(None, 85)
+    font2 = pygame.font.Font(None, 36)
+    text = font1.render("УРОВНИ", True, (255, 0, 0))
+    text2 = font2.render('Передвигаясь по лабиринту с помощью стрелок дойдите до выхода',
+                         True, (255, 255, 255))
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-level = norm_level.copy()
-norm_level.clear()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if level1.rect.collidepoint(event.pos):
+                    check_level_num(0)
+                    running = False
+                if level2.rect.collidepoint(event.pos):
+                    check_level_num(1)
+                    running = False
+                if level3.rect.collidepoint(event.pos):
+                    check_level_num(2)
+                    running = False
+                if level4.rect.collidepoint(event.pos):
+                    check_level_num(3)
+                    running = False
+                if level5.rect.collidepoint(event.pos):
+                    check_level_num(4)
+                    running = False
+                if level6.rect.collidepoint(event.pos):
+                    check_level_num(5)
+                    running = False
+                if level7.rect.collidepoint(event.pos):
+                    check_level_num(6)
+                    running = False
+        screen.fill((0, 0, 0))
+        screen.blit(BackGround.image, BackGround.rect)
+        screen.blit(text, (350, 50))
+        screen.blit(text2, (10, 100))
+        level1.draw_level_end(screen)
+        level2.draw_level_end(screen)
+        level3.draw_level_end(screen)
+        level4.draw_level_end(screen)
+        level5.draw_level_end(screen)
+        level6.draw_level_end(screen)
+        level7.draw_level_end(screen)
+        pygame.display.flip()
+
+
+def check_level_num(num):
+    cur_stolb = LEVELS_SP[num]
+    cur_level = './levels_txt/' + cur_stolb
+    cur_stolb = cur_stolb[:cur_stolb.index('.')]
+    global level
+    level = load_level(cur_level)
+    norm_level = []
+    for i in level:
+        norm_level.append(''.join(i))
+    level = norm_level.copy()
+    norm_level.clear()
+    run_game_py(cur_level, cur_stolb)
 
 
 def generate_level(level):
@@ -141,7 +184,11 @@ def generate_level(level):
             elif level[y][x] == '@':
                 new_player = Player(x, y)
                 global player_x, player_y
-                player_x, player_y = x, y  # нач коорд
+                player_x, player_y = x, y
+            # нач коорд
+            elif level[y][x] == '*':
+                Tile('door', x, y)
+
     return new_player
 
 
@@ -150,43 +197,55 @@ def get_user(username):
     user = username
 
 
-def game_end(cur_time, rec_time, rec):
-    surface = pygame.Surface((900, 700))
-    surface.set_alpha(255)
-
+def game_end(cur_time, rec_time, rec, cur_level, cur_stolb):
     running = True
-    to_level = login_window.Button(350, 300, 200, 50, 'К уровням')
-    restart = login_window.Button(350, 400, 200, 50, 'Заново')
+    to_level = login_window.Button(350, 300, 150, 50, 'К уровням')
+    restart = login_window.Button(350, 400, 150, 50, 'Заново')
+    exit = login_window.Button(15, 20, 100, 50, "выход")
     while running:
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if restart.rect.collidepoint(event.pos):
+                    print(cur_level, cur_stolb)
+                    run_game_py(cur_level, cur_stolb)
+                    terminate()
+                if to_level.rect.collidepoint(event.pos):
+                    show_levels()
+                    terminate()
+                if exit.rect.collidepoint(event.pos):
+                    terminate()
 
         screen.fill((0, 0, 0))
-        surface.blit(BackGround.image, BackGround.rect)
+        screen.blit(BackGround.image, BackGround.rect)
         font1 = pygame.font.Font(None, 74)
         font2 = pygame.font.Font(None, 36)
         tex = font1.render('Уровень Завершен', True, (255, 0, 0))
-        surface.blit(tex, (250, 20))
+        screen.blit(tex, (250, 20))
         tex2 = font2.render(f'Текущее время:{cur_time}', True, (255, 255, 255))
-        surface.blit(tex2, (350, 100))
+        screen.blit(tex2, (350, 100))
         tex3 = font2.render(f'Рекордное время:{rec_time}', True, (255, 255, 255))
-        surface.blit(tex3, (350, 150))
+        screen.blit(tex3, (350, 150))
         if rec:
             tex4 = font1.render('ВЫ ПОБИЛИ РЕКОРД', True, (0, 255, 0))
-            surface.blit(tex4, (230, 210))
-        to_level.draw_level_end(surface)
-        restart.draw_level_end(surface)
-        screen.blit(surface, (0, 0))
+            screen.blit(tex4, (230, 210))
+        to_level.draw_level_end(screen)
+        restart.draw_level_end(screen)
+        exit.draw_level_end(screen)
         pygame.display.flip()
 
 
-def run_game_py():
+def run_game_py(cur_level, cur_stolb):
+    sprite_group.empty()
+    hero_group.empty()
+
     start_time = time.time()
     running = True
     level_map = load_level(cur_level)
+    print(level_map)
     hero = generate_level(level_map)
+    print(hero)
 
     cur_record = CUR.execute(f"SELECT {cur_stolb} FROM login WHERE username = '{user}'").fetchall()
     cur_record = cur_record[0][0]
@@ -234,12 +293,16 @@ def run_game_py():
             if new_minutes < cur_record_min or (new_seconds < cur_record_sec and new_minutes == cur_record_min):
                 CUR.execute(f"UPDATE login SET {cur_stolb} = '{time_to_BD}' WHERE username = '{user}'")
                 CON.commit()
-                game_end(time_to_BD, time_to_BD, 1)
+                game_end(time_to_BD, time_to_BD, 1, cur_level, cur_stolb)
                 running = False
+                screen.fill((0, 0, 0))
                 terminate()
             else:
-                game_end(time_to_BD, cur_record, 0)
+                game_end(time_to_BD, cur_record, 0, cur_level, cur_stolb)
                 running = False
+                screen.fill((0, 0, 0))
+                cur_stolb = ''
+                cur_level = ''
                 terminate()
 
                 # break
@@ -247,8 +310,10 @@ def run_game_py():
             time_to_BD = f'{new_minutes}:{new_seconds}'
             CUR.execute(f"UPDATE login SET {cur_stolb} = '{time_to_BD}' WHERE username = '{user}'")
             CON.commit()
-            game_end(time_to_BD, time_to_BD, 1)
+            game_end(time_to_BD, time_to_BD, 1, cur_level, cur_stolb)
+            print(cur_level, cur_stolb)
             running = False
+            screen.fill((0, 0, 0))
             terminate()
 
     terminate()
