@@ -17,3 +17,11 @@ def start_app():
     FPS = settings[2]
     screen = pygame.display.set_mode(size)
     return screen, FPS
+
+
+class Background(pygame.sprite.Sprite):
+    def __init__(self, image_file, location):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(image_file)  # Загрузка изображения
+        self.rect = self.image.get_rect()  # Получение прямоугольника изображения
+        self.rect.left, self.rect.top = location  # Установка позиции
