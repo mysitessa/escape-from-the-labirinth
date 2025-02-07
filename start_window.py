@@ -3,7 +3,7 @@ import sys
 from settings import *
 import pygame_menu
 import login_window
-from game import run_game_py, get_user
+from game import get_user, show_levels
 
 WHITE = (255, 255, 255)
 
@@ -25,11 +25,11 @@ def run_menu(username):
     theme = pygame_menu.themes.THEME_BLUE.copy()
     background = pygame_menu.baseimage.BaseImage("./image/BackGround_login.jpg")
     theme.background_color = background
-    menu = pygame_menu.Menu('MONSTER_HUNTER', 900, 700,
+    menu = pygame_menu.Menu('escape-from-the-labirinth', 900, 700,
                             theme=theme)
 
     get_user(username)
-    menu.add.button('Играть', run_game_py)
+    menu.add.button('К уровням', show_levels)
     menu.add.button('Сменить аккаунт', return_login)
 
     while running:
