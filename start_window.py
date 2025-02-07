@@ -3,7 +3,7 @@ import sys
 from settings import *
 import pygame_menu
 import login_window
-from game import run_game_py, get_user
+from game import get_user, show_levels
 
 WHITE = (255, 255, 255)
 
@@ -29,7 +29,7 @@ def run_menu(username):
                             theme=theme)
 
     get_user(username)
-    menu.add.button('Играть', run_game_py)
+    menu.add.button('К уровням', show_levels)
     menu.add.button('Сменить аккаунт', return_login)
 
     while running:
