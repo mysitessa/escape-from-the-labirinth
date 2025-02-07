@@ -1,51 +1,48 @@
 import os
 import sys
 
-import pygame
-
 import login_window
 from settings import *
 import time
-from connect import connect
+import sqlite3
 
-con = connect()
-CON = con[0]
-CUR = con[1]
+# Подключение к базе данных SQLite
+CON = sqlite3.connect('Base_Date.sqlite')
+CUR = CON.cursor()
+
+# Список файлов уровней
 LEVELS_SP = ['level1.txt', 'level2.txt', 'level3.txt', 'level4.txt', 'level5.txt', 'level6.txt', 'level7.txt',
              'level8.txt']
-# Добавляем группу для ключей
+
+# Группа для спрайтов ключей
 key_group = pygame.sprite.Group()
 
-
-class Background(pygame.sprite.Sprite):
-    def __init__(self, image_file, location):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load(image_file)
-        self.rect = self.image.get_rect()
-        self.rect.left, self.rect.top = location
-
-
+# Создание фонового изображения
 BackGround = Background('./image/H-qKzXj2k-k.jpg', [0, 0])
 
 
+# Функция для загрузки изображений
 def load_image(name, colorkey=None):
-    fullname = os.path.join('image', name)
-    if not os.path.isfile(fullname):
+    fullname = os.path.join('image', name)  # Полный путь к изображению
+    if not os.path.isfile(fullname):  # Проверка существования файла
         print(f"Файл с изображением '{fullname}' не найден")
         raise FileNotFoundError(fullname)
-    image = pygame.image.load(fullname)
+    image = pygame.image.load(fullname)  # Загрузка изображения
     return image
 
 
+# Инициализация Pygame и получение настроек
 pygame.init()
 get_config()
 settings = start_app()
-screen = settings[0]
-FPS = settings[1]
+screen = settings[0]  # Экран
+FPS = settings[1]  # Частота кадров
 
+# Группы спрайтов
 sprite_group = pygame.sprite.Group()
 hero_group = pygame.sprite.Group()
 
+# Словарь с изображениями для тайлов
 tile_image = {
     'wall': load_image('stena.jpg'),
     'hero': load_image('main_hero.png'),
@@ -53,10 +50,12 @@ tile_image = {
     'key': load_image('key.png')
 }
 
+# Размеры тайлов
 tile_width = tile_height = 50
-player_x, player_y = 0, 0
+player_x, player_y = 0, 0  # Начальные координаты игрока
 
 
+# Базовый класс для спрайтов
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, group):
         super().__init__(group)
@@ -66,41 +65,40 @@ class Sprite(pygame.sprite.Sprite):
         pass
 
 
+# Класс для тайлов
 class Tile(Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(sprite_group)
-        self.image = tile_image[tile_type]
-        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.image = tile_image[tile_type]  # Изображение тайла
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)  # Позиция тайла
         if tile_type == 'key':  # Если это ключ, добавляем его в отдельную группу
             self.add(key_group)
 
 
+# Класс для игрока
 class Player(Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(hero_group)
-        self.image = tile_image['hero']
-        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
+        self.image = tile_image['hero']  # Изображение игрока
+        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)  # Позиция игрока
         self.pos = (pos_x, pos_y)
         self.keys_collected = 0  # Счетчик собранных ключей
 
+    # Метод для перемещения игрока
     def move(self, dx, dy):
         global player_x, player_y
-        # Продолжаем двигаться в заданном направлении до столкновения со стеной
         while True:
             new_x = player_x + dx
             new_y = player_y + dy
-            if 0 <= new_x < len(level[0]) and 0 <= new_y < len(level):
-                if level[new_y][new_x] != '#':
-                    # Проверка на сбор ключа
-                    if level[new_y][new_x] == '-':
-                        self.keys_collected += 1
+            if 0 <= new_x < len(level[0]) and 0 <= new_y < len(level):  # Проверка границ уровня
+                if level[new_y][new_x] != '#':  # Проверка на стену
+                    if level[new_y][new_x] == '-':  # Проверка на ключ
+                        self.keys_collected += 1  # Увеличиваем счетчик ключей
                         level[new_y] = level[new_y][:new_x] + '.' + level[new_y][new_x + 1:]  # Убираем ключ с карты
-                        # Удаляем спрайт ключа
-                        for key_sprite in key_group:
+                        for key_sprite in key_group:  # Удаляем спрайт ключа
                             if key_sprite.rect.collidepoint(new_x * tile_width, new_y * tile_height):
                                 key_sprite.kill()
                                 print('peresec')
-                                # Удаляем спрайт ключа
                     level[player_y] = level[player_y][:player_x] + '.' + level[player_y][player_x + 1:]
                     level[new_y] = level[new_y][:new_x] + '@' + level[new_y][new_x + 1:]
                     player_x, player_y = new_x, new_y
@@ -111,11 +109,13 @@ class Player(Sprite):
                 break
 
 
+# Функция для завершения работы программы
 def terminate():
     pygame.quit()
     sys.exit()
 
 
+# Функция для загрузки уровня из файла
 def load_level(filename):
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
@@ -123,6 +123,7 @@ def load_level(filename):
     return list(map(lambda x: list(x.ljust(max_width, '.')), level_map))
 
 
+# Функция для отображения списка уровней
 def show_levels():
     level1 = login_window.Button(200, 300, 150, 50, 'Уровень 1')
     level2 = login_window.Button(200, 360, 150, 50, 'Уровень 2')
@@ -178,6 +179,7 @@ def show_levels():
         pygame.display.flip()
 
 
+# Функция для проверки номера уровня
 def check_level_num(num):
     cur_stolb = LEVELS_SP[num]
     cur_level = './levels_txt/' + cur_stolb
@@ -192,6 +194,7 @@ def check_level_num(num):
     run_game_py(cur_level, cur_stolb)
 
 
+# Функция для генерации уровня
 def generate_level(level):
     new_player = None
 
@@ -203,7 +206,6 @@ def generate_level(level):
                 new_player = Player(x, y)
                 global player_x, player_y
                 player_x, player_y = x, y
-            # нач коорд
             elif level[y][x] == '*':
                 Tile('door', x, y)
             elif level[y][x] == '-':
@@ -212,11 +214,13 @@ def generate_level(level):
     return new_player
 
 
+# Функция для получения имени пользователя
 def get_user(username):
     global user
     user = username
 
 
+# Функция для завершения игры
 def game_end(cur_time, rec_time, rec, cur_level, cur_stolb):
     running = True
     to_level = login_window.Button(350, 300, 150, 50, 'К уровням')
@@ -250,6 +254,7 @@ def game_end(cur_time, rec_time, rec, cur_level, cur_stolb):
         pygame.display.flip()
 
 
+# Основная функция для запуска игры
 def run_game_py(cur_level, cur_stolb):
     sprite_group.empty()
     hero_group.empty()
@@ -328,5 +333,3 @@ def run_game_py(cur_level, cur_stolb):
             running = False
             screen.fill((0, 0, 0))
             terminate()
-
-    terminate()
