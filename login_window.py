@@ -3,7 +3,8 @@ import pygame.event
 from settings import *
 import sys
 from connect import connect
-pygame.display.set_caption('Monster_Hunter')
+
+pygame.display.set_caption('escape-from-the-labirinth')
 con = connect()
 CON = con[0]
 CUR = con[1]
@@ -80,13 +81,12 @@ class Button:
         text_surface = self.font.render(self.text, True, WHITE)
         surface.blit(text_surface, (self.rect.x + 10, self.rect.y + 5))
 
-
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
         text_surface = self.font.render(self.text, True, WHITE)
         surface.blit(text_surface, (self.rect.x + 10, self.rect.y + 5))
         f1 = pygame.font.Font(None, 50)
-        text1 = f1.render('MONSTER_HUNTER', True,
+        text1 = f1.render('escape-from-the-labirinth', True,
                           (0, 128, 128))
         surface.blit(text1, (300, 50))
         f2 = pygame.font.Font(None, 36)
@@ -130,7 +130,6 @@ class Osnova:
                         if self.password_vhod and self.user_vhod:
                             self.log_in()
 
-
                 # Обработка событий для полей ввода
                 self.input_box_user.event(event)
                 self.input_box_pass.event(event)
@@ -152,9 +151,7 @@ class Osnova:
                 run_menu(self.user_vhod)
                 terminate()
         except Exception:
-            f5 = pygame.font.Font(None, 36)
-            text5 = f5.render("неправильный пароль или логин", True, (255, 0, 0))
-            screen.blit(text5, (100, 400))
+            pass
 
 
 class Registration:
@@ -167,6 +164,7 @@ class Registration:
         self.input_box_pass = InputBox(100, 150, 400, 40)
         self.button_register = Button(220, 200, 150, 32, "Регистрация")
         self.nazad_login = Button(10, 50, 80, 32, "Назад")
+        self.surface = pygame.Surface((400, 20))
 
     def run(self):
         while True:
@@ -199,13 +197,14 @@ class Registration:
             pygame.display.flip()
 
     def reg(self):
-        if self.user and self.password:
+        us_check = CUR.execute(f"SELECT username FROM login WHERE username = '{self.user}'").fetchall()
+        if us_check:
+            pass
+        elif self.user and self.password:
             CUR.execute(f"INSERT INTO login(password, username) VALUES('{self.password}', '{self.user}')")
             CON.commit()
             run_menu(self.user)
             terminate()
-        else:
-            print('ER')
 
 
 def start_game():

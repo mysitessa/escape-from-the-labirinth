@@ -25,7 +25,7 @@ def run_menu(username):
     theme = pygame_menu.themes.THEME_BLUE.copy()
     background = pygame_menu.baseimage.BaseImage("./image/BackGround_login.jpg")
     theme.background_color = background
-    menu = pygame_menu.Menu('MONSTER_HUNTER', 900, 700,
+    menu = pygame_menu.Menu('escape-from-the-labirinth', 900, 700,
                             theme=theme)
 
     get_user(username)
