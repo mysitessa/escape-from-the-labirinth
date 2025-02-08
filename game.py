@@ -79,30 +79,46 @@ class Tile(Sprite):
 class Player(Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(hero_group)
-        self.image = tile_image['hero']  # Изображение игрока
-        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)  # Позиция игрока
+        self.images = [
+            load_image('hero1.png'),
+            load_image('hero2.png'),
+            load_image('hero3.png'),
+            load_image('hero4.png')
+        ]
+        self.current_image = 0
+        self.image = self.images[self.current_image]
+        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
         self.pos = (pos_x, pos_y)
-        self.keys_collected = 0  # Счетчик собранных ключей
+        self.keys_collected = 0
+        self.animation_speed = 10  # Скорость анимации (чем меньше, тем быстрее)
+        self.animation_counter = 0
 
-    # Метод для перемещения игрока
+    def update(self):
+        # Обновление анимации
+        self.animation_counter += 1
+        if self.animation_counter >= self.animation_speed:
+            self.animation_counter = 0
+            self.current_image = (self.current_image + 1) % len(self.images)
+            self.image = self.images[self.current_image]
+
     def move(self, dx, dy):
         global player_x, player_y
         while True:
             new_x = player_x + dx
             new_y = player_y + dy
-            if 0 <= new_x < len(level[0]) and 0 <= new_y < len(level):  # Проверка границ уровня
-                if level[new_y][new_x] != '#':  # Проверка на стену
-                    if level[new_y][new_x] == '-':  # Проверка на ключ
-                        self.keys_collected += 1  # Увеличиваем счетчик ключей
-                        level[new_y] = level[new_y][:new_x] + '.' + level[new_y][new_x + 1:]  # Убираем ключ с карты
-                        for key_sprite in key_group:  # Удаляем спрайт ключа
+            if 0 <= new_x < len(level[0]) and 0 <= new_y < len(level):
+                if level[new_y][new_x] != '#':
+                    if level[new_y][new_x] == '-':
+                        self.keys_collected += 1
+                        level[new_y] = level[new_y][:new_x] + '.' + level[new_y][new_x + 1:]
+                        for key_sprite in key_group:
                             if key_sprite.rect.collidepoint(new_x * tile_width, new_y * tile_height):
                                 key_sprite.kill()
                                 print('peresec')
                     level[player_y] = level[player_y][:player_x] + '.' + level[player_y][player_x + 1:]
                     level[new_y] = level[new_y][:new_x] + '@' + level[new_y][new_x + 1:]
                     player_x, player_y = new_x, new_y
-                    self.rect.move_ip(dx * tile_width, dy * tile_height)  # Обновление позиции спрайта
+                    self.rect.move_ip(dx * tile_width, dy * tile_height)
                 else:
                     break
             else:
@@ -276,6 +292,7 @@ def run_game_py(cur_level, cur_stolb):
     if cur_record:
         cur_record_min = int(cur_record[:cur_record.index(':')])
         cur_record_sec = int(cur_record[cur_record.index(':') + 1:])
+    clock = pygame.time.Clock()
 
     while running:
         for event in pygame.event.get():
@@ -313,6 +330,9 @@ def run_game_py(cur_level, cur_stolb):
         keys_display = font_keys.render(f"Ключи: {hero.keys_collected}", True, (255, 255, 255))
         screen.blit(keys_display, (20, 20))
         ret_level.draw_level_end(screen)
+        hero.update()  # Обновляем анимацию персонажа
+        pygame.display.flip()
+        clock.tick(FPS)  # Ограничение FPS
 
         pygame.display.flip()
 
