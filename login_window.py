@@ -1,4 +1,3 @@
-import pygame.event  # Импорт модуля для работы с событиями Pygame
 from settings import *  # Импорт настроек игры
 import sys  # Импорт модуля для работы с системными функциями
 import sqlite3  # Импорт модуля для работы с базой данных SQLite
